@@ -1,6 +1,6 @@
 package Video::OpenQuicktime;
 
-our $VERSION = '1.01';
+our $VERSION = '1.02';
 
 BEGIN {
   local $/;
@@ -10,7 +10,7 @@ BEGIN {
 				   Config => (
 							  LIBS    => '-lopenquicktime ',
 							  NAME    => 'Video::OpenQuicktime',
-							  VERSION => '1.01',
+							  VERSION => '1.02',
 							 ),
 				  );
   use Inline C => $var;
@@ -25,9 +25,10 @@ sub new {
 
 sub init {
   my $self = shift;
-  my @args = @_;
-  s/^-?(.+)$/$1/ foreach @args;
-  my %param = @args;
+  my %raw = @_;
+  my %param;
+  foreach(keys %raw){/^-?(.+)/;$param{$1} = $raw{$_}};
+
   $self->filename($param{file});
   $self->_oqt( $self->init_file() );
 }
@@ -59,6 +60,8 @@ sub init_file {
 
   my $oqt_address = $self->new_oqt($self->filename);
 
+warn $oqt_address;
+
   #<SPEAK>
   close(STDERR);
   open(STDERR,">&TERR");
@@ -71,7 +74,15 @@ sub init_file {
 sub get_audio_bits { return $_[0]->_get_audio_bits( $_[0]->_oqt , 0 ); }
 sub get_audio_channels { return $_[0]->_get_audio_channels( $_[0]->_oqt , 0 ); }
 sub get_audio_codec { return $_[0]->_get_audio_codec( $_[0]->_oqt , 0 ); }
-sub get_audio_compressor { return $_[0]->_get_audio_compressor( $_[0]->_oqt , 0 ); }
+
+sub get_audio_compressor { 
+  if($_[0]->get_audio_bits( $_[0]->_oqt , 0 )){
+	return $_[0]->_get_audio_compressor( $_[0]->_oqt , 0 );
+  } else {
+	return undef;
+  }
+}
+
 sub get_audio_length { return $_[0]->_get_audio_length( $_[0]->_oqt , 0 ); }
 sub get_audio_samplerate { return $_[0]->_get_audio_samplerate( $_[0]->_oqt , 0 ); }
 sub get_audio_track_count { return $_[0]->_get_audio_track_count( $_[0]->_oqt ); }
@@ -192,41 +203,41 @@ __C__
 int long_display = 1;
 
 int _get_audio_bits(char *self, int address, int track){
-  quicktime_t *qtfile = address;
+  quicktime_t *qtfile = (quicktime_t *) address;
   return quicktime_audio_bits(qtfile,track);
 }
 
 int _get_audio_channels(char *self, int address, int track){
-  quicktime_t *qtfile = address;
+  quicktime_t *qtfile = (quicktime_t *) address;
   return quicktime_track_channels(qtfile,track);
 }
 
 int _get_audio_codec(char *self, int address, int track){
-  quicktime_t *qtfile = address;
-  return quicktime_init_acodec(qtfile,track);
+  quicktime_t *qtfile = (quicktime_t *) address;
+  return quicktime_init_acodec(qtfile, (quicktime_audio_map_t *) track);
 }
 
 //char* _get_audio_codec(char *self, int address, int track){
-//  quicktime_t *qtfile = address;
+//  quicktime_t *qtfile = (quicktime_t *) address;
 //  return quicktime_audio_codec(qtfile,track);
 //}
 //
 char* _get_audio_compressor(char *self, int address, int track){
-  quicktime_t *qtfile = address;
+  quicktime_t *qtfile = (quicktime_t *) address;
   return quicktime_audio_compressor(qtfile,track);
 }
 
 int _get_audio_length(char *self, int address, int track){
-  quicktime_t *qtfile = address;
+  quicktime_t *qtfile = (quicktime_t *) address;
   return quicktime_audio_length(qtfile,track);
 }
 
 int _get_audio_samplerate(char *self, int address, int track){
-  quicktime_t *qtfile = address;
+  quicktime_t *qtfile = (quicktime_t *) address;
   return quicktime_sample_rate(qtfile,track);
 }
 int _get_audio_track_count(char *self, int address){
-  quicktime_t *qtfile = address;
+  quicktime_t *qtfile = (quicktime_t *) address;
   return quicktime_audio_tracks(qtfile);
 }
 
@@ -241,79 +252,79 @@ int _get_audio_track_count(char *self, int address){
 //}
 
 char* _get_info(char *self, int address){
-  quicktime_t *qtfile = address;
+  quicktime_t *qtfile = (quicktime_t *) address;
   return quicktime_get_info(qtfile);
 }
 
 char* _get_name(char *self, int address){
-  quicktime_t *qtfile = address;
+  quicktime_t *qtfile = (quicktime_t *) address;
   return quicktime_get_name(qtfile);
 }
 
 char* _get_copyright(char *self, int address){
-  quicktime_t *qtfile = address;
+  quicktime_t *qtfile = (quicktime_t *) address;
   return quicktime_get_copyright(qtfile);
 }
 
 char* _get_video_compressor(char *self, int address, int track){
-  quicktime_t *qtfile = address;
+  quicktime_t *qtfile = (quicktime_t *) address;
   return quicktime_video_compressor(qtfile, track);
 }
 
 int _get_video_depth(char *self, int address, int track){
-  quicktime_t *qtfile = address;
+  quicktime_t *qtfile = (quicktime_t *) address;
   return quicktime_video_depth(qtfile, track);
 }
 
 int _get_video_framerate(char *self, int address, int track){
-  quicktime_t *qtfile = address;
+  quicktime_t *qtfile = (quicktime_t *) address;
   return quicktime_frame_rate(qtfile, track);
 }
 
 /*
 #########################
 int _get_info_list(char *self, int address){
-  quicktime_t *qtfile = address;
+  quicktime_t *qtfile = (quicktime_t *) address;
   return quicktime_info_list(qtfile);
 }
 
 int _get_info_name(char *self, int address){
-  quicktime_t *qtfile = address;
+  quicktime_t *qtfile = (quicktime_t *) address;
   return quicktime_info_name(qtfile);
 }
 
 int _get_info_value(char *self, int address){
-  quicktime_t *qtfile = address;
+  quicktime_t *qtfile = (quicktime_t *) address;
   return quicktime_info_value(qtfile);
 }
 
 int _get_video_codec(char *self, int address, int track){
-  quicktime_t *qtfile = address;
+  quicktime_t *qtfile = (quicktime_t *) address;
   return quicktime_video_codec(qtfile, track);
 }
 
 int _get_video_framesize(char *self, int address, int track){
-  quicktime_t *qtfile = address;
+  quicktime_t *qtfile = (quicktime_t *) address;
   return quicktime_video_framesize(qtfile, track);
 }
 
 int _get_video_keyframe_after(char *self, int address){
-  quicktime_t *qtfile = address;
+  quicktime_t *qtfile = (quicktime_t *) address;
   return quicktime_video_keyframe_after(qtfile);
 }
 
 int _get_video_keyframe_before(char *self, int address){
-  quicktime_t *qtfile = address;
+  quicktime_t *qtfile = (quicktime_t *) address;
   return quicktime_video_keyframe_before(qtfile);
 }
 
 int _get_video_param(char *self, int address){
-  quicktime_t *qtfile = address;
+  quicktime_t *qtfile = (quicktime_t *) address;
   return quicktime_video_param(qtfile);
 }
 
 int _get_video_position(char *self, int address){
-  quicktime_t *qtfile = address;
+  quicktime_t *qtfile = (quicktime_t *) address;
   return quicktime_video_position(qtfile);
 }
 #########################
@@ -321,32 +332,31 @@ int _get_video_position(char *self, int address){
 
 
 int _get_video_height(char *self, int address, int track){
-  quicktime_t *qtfile = address;
+  quicktime_t *qtfile = (quicktime_t *) address;
   return quicktime_video_height(qtfile, track);
 }
 
 int _get_video_length(char *self, int address, int track){
-  quicktime_t *qtfile = address;
+  quicktime_t *qtfile = (quicktime_t *) address;
 //ad  return oqt_get_video_length(qtfile, track);
   return quicktime_video_length(qtfile, track);
 }
 
 int _get_video_track_count(char *self, int address){
-  quicktime_t *qtfile = address;
+  quicktime_t *qtfile = (quicktime_t *) address;
   return quicktime_video_tracks(qtfile);
 }
 
 
 int _get_video_width(char *self, int address, int track){
-  quicktime_t *qtfile = address;
+  quicktime_t *qtfile = (quicktime_t *) address;
   return quicktime_video_width(qtfile, track);
 }
 
 int new_oqt(char *self, char *filename) {
-//ad  int *qtfile = malloc(sizeof(quicktime_t));
+
   int *qtfile = malloc(sizeof(quicktime_t));
   qtfile = quicktime_open(filename,1,0); //filename, read, write
-
   if(!qtfile) {
 	return -1; //couldn\'t open *filename
   }
@@ -357,7 +367,7 @@ int new_oqt(char *self, char *filename) {
   //  return -1; //couldn\'t read movie headers
   //}
 
-  return qtfile;
+  return (int) qtfile;
 }
 //
 //char* get_oqt(char *self, int address) {
