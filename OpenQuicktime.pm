@@ -1,6 +1,6 @@
 package Video::OpenQuicktime;
 
-our $VERSION = '1.00';
+our $VERSION = '1.01';
 
 BEGIN {
   local $/;
@@ -10,7 +10,7 @@ BEGIN {
 				   Config => (
 							  LIBS    => '-lopenquicktime ',
 							  NAME    => 'Video::OpenQuicktime',
-							  VERSION => '1.00',
+							  VERSION => '1.01',
 							 ),
 				  );
   use Inline C => $var;
@@ -76,10 +76,9 @@ sub get_audio_length { return $_[0]->_get_audio_length( $_[0]->_oqt , 0 ); }
 sub get_audio_samplerate { return $_[0]->_get_audio_samplerate( $_[0]->_oqt , 0 ); }
 sub get_audio_track_count { return $_[0]->_get_audio_track_count( $_[0]->_oqt ); }
 
-sub get_info_count { return $_[0]->_get_info_count( $_[0]->_oqt ); }
-sub get_info_list { return $_[0]->_get_info_list( $_[0]->_oqt ); }
-sub get_info_name { return $_[0]->_get_info_name( $_[0]->_oqt ); }
-sub get_info_value { return $_[0]->_get_info_value( $_[0]->_oqt ); }
+sub get_info { return $_[0]->_get_info( $_[0]->_oqt ); }
+sub get_name { return $_[0]->_get_name( $_[0]->_oqt ); }
+sub get_copyright { return $_[0]->_get_copyright( $_[0]->_oqt ); }
 
 sub get_video_codec { return $_[0]->_get_video_codec( $_[0]->_oqt, 0 ); }
 sub get_video_compressor { return $_[0]->_get_video_compressor( $_[0]->_oqt , 0 ); }
@@ -94,7 +93,6 @@ sub get_video_param { return $_[0]->_get_video_param( $_[0]->_oqt ); }
 sub get_video_position { return $_[0]->_get_video_position( $_[0]->_oqt ); }
 sub get_video_track_count { return $_[0]->_get_video_track_count( $_[0]->_oqt ); }
 sub get_video_width { return $_[0]->_get_video_width( $_[0]->_oqt , 0); }
-
 sub length { return $_[0]->_get_video_length( $_[0]->_oqt , 0 ) / $_[0]->_get_video_framerate( $_[0]->_oqt , 0 ); }
 
 
@@ -154,7 +152,9 @@ call to oqt_get_audio_bits().
  get_audio_length
  get_audio_samplerate
  get_audio_track_count
- get_info_count
+ get_copyright
+ get_info
+ get_name
  get_video_compressor
  get_video_depth
  get_video_framerate
@@ -183,296 +183,321 @@ OpenQuicktime: documentation for openquicktime.h
 __DATA__
 __C__
 #include "openquicktime/openquicktime.h"
-#include "openquicktime/structs.h"
-#include "openquicktime/plugin.h"
+#include "openquicktime/codecs.h"
+//#include "openquicktime/structs.h"
+//#include "openquicktime/plugin.h"
 #include "openquicktime/colormodels.h"
 #include "openquicktime/config.h"
 
 int long_display = 1;
 
 int _get_audio_bits(char *self, int address, int track){
-  oqt_t *qtfile = address;
-  return oqt_get_audio_bits(qtfile,track);
+  quicktime_t *qtfile = address;
+  return quicktime_audio_bits(qtfile,track);
 }
 
 int _get_audio_channels(char *self, int address, int track){
-  oqt_t *qtfile = address;
-  return oqt_get_audio_channels(qtfile,track);
+  quicktime_t *qtfile = address;
+  return quicktime_track_channels(qtfile,track);
 }
 
-char* _get_audio_codec(char *self, int address, int track){
-  oqt_t *qtfile = address;
-  return oqt_get_audio_codec(qtfile,track);
+int _get_audio_codec(char *self, int address, int track){
+  quicktime_t *qtfile = address;
+  return quicktime_init_acodec(qtfile,track);
 }
 
+//char* _get_audio_codec(char *self, int address, int track){
+//  quicktime_t *qtfile = address;
+//  return quicktime_audio_codec(qtfile,track);
+//}
+//
 char* _get_audio_compressor(char *self, int address, int track){
-  oqt_t *qtfile = address;
-  return oqt_get_audio_compressor(qtfile,track);
+  quicktime_t *qtfile = address;
+  return quicktime_audio_compressor(qtfile,track);
 }
 
 int _get_audio_length(char *self, int address, int track){
-  oqt_t *qtfile = address;
-  return oqt_get_audio_length(qtfile,track);
+  quicktime_t *qtfile = address;
+  return quicktime_audio_length(qtfile,track);
 }
 
 int _get_audio_samplerate(char *self, int address, int track){
-  oqt_t *qtfile = address;
-  return oqt_get_audio_samplerate(qtfile,track);
+  quicktime_t *qtfile = address;
+  return quicktime_sample_rate(qtfile,track);
 }
 int _get_audio_track_count(char *self, int address){
-  oqt_t *qtfile = address;
-  return oqt_get_audio_track_count(qtfile);
+  quicktime_t *qtfile = address;
+  return quicktime_audio_tracks(qtfile);
 }
 
-//int oqt_get_audio_channel_loc(char *self, int address){}
-//int oqt_get_audio_frames_to_bytes(char *self, int address){}
-//int oqt_get_audio_param(char *self, int address){}
-// oqt_get_audio_position(char *self, int address){}
+////int quicktime_audio_channel_loc(char *self, int address){}
+////int quicktime_audio_frames_to_bytes(char *self, int address){}
+////int quicktime_audio_param(char *self, int address){}
+//// quicktime_audio_position(char *self, int address){}
+//
+//int _get_info_count(char *self, int address){
+//  quicktime_t *qtfile = address;
+//  return quicktime_info_count(qtfile);
+//}
 
-int _get_info_count(char *self, int address){
-  oqt_t *qtfile = address;
-  return oqt_get_info_count(qtfile);
+char* _get_info(char *self, int address){
+  quicktime_t *qtfile = address;
+  return quicktime_get_info(qtfile);
+}
+
+char* _get_name(char *self, int address){
+  quicktime_t *qtfile = address;
+  return quicktime_get_name(qtfile);
+}
+
+char* _get_copyright(char *self, int address){
+  quicktime_t *qtfile = address;
+  return quicktime_get_copyright(qtfile);
 }
 
 char* _get_video_compressor(char *self, int address, int track){
-  oqt_t *qtfile = address;
-  return oqt_get_video_compressor(qtfile, track);
+  quicktime_t *qtfile = address;
+  return quicktime_video_compressor(qtfile, track);
 }
 
 int _get_video_depth(char *self, int address, int track){
-  oqt_t *qtfile = address;
-  return oqt_get_video_depth(qtfile, track);
+  quicktime_t *qtfile = address;
+  return quicktime_video_depth(qtfile, track);
 }
 
 int _get_video_framerate(char *self, int address, int track){
-  oqt_t *qtfile = address;
-  return oqt_get_video_framerate(qtfile, track);
+  quicktime_t *qtfile = address;
+  return quicktime_frame_rate(qtfile, track);
 }
 
 /*
 #########################
 int _get_info_list(char *self, int address){
-  oqt_t *qtfile = address;
-  return oqt_get_info_list(qtfile);
+  quicktime_t *qtfile = address;
+  return quicktime_info_list(qtfile);
 }
 
 int _get_info_name(char *self, int address){
-  oqt_t *qtfile = address;
-  return oqt_get_info_name(qtfile);
+  quicktime_t *qtfile = address;
+  return quicktime_info_name(qtfile);
 }
 
 int _get_info_value(char *self, int address){
-  oqt_t *qtfile = address;
-  return oqt_get_info_value(qtfile);
+  quicktime_t *qtfile = address;
+  return quicktime_info_value(qtfile);
 }
 
 int _get_video_codec(char *self, int address, int track){
-  oqt_t *qtfile = address;
-  return oqt_get_video_codec(qtfile, track);
+  quicktime_t *qtfile = address;
+  return quicktime_video_codec(qtfile, track);
 }
 
 int _get_video_framesize(char *self, int address, int track){
-  oqt_t *qtfile = address;
-  return oqt_get_video_framesize(qtfile, track);
+  quicktime_t *qtfile = address;
+  return quicktime_video_framesize(qtfile, track);
 }
 
 int _get_video_keyframe_after(char *self, int address){
-  oqt_t *qtfile = address;
-  return oqt_get_video_keyframe_after(qtfile);
+  quicktime_t *qtfile = address;
+  return quicktime_video_keyframe_after(qtfile);
 }
 
 int _get_video_keyframe_before(char *self, int address){
-  oqt_t *qtfile = address;
-  return oqt_get_video_keyframe_before(qtfile);
+  quicktime_t *qtfile = address;
+  return quicktime_video_keyframe_before(qtfile);
 }
 
 int _get_video_param(char *self, int address){
-  oqt_t *qtfile = address;
-  return oqt_get_video_param(qtfile);
+  quicktime_t *qtfile = address;
+  return quicktime_video_param(qtfile);
 }
 
 int _get_video_position(char *self, int address){
-  oqt_t *qtfile = address;
-  return oqt_get_video_position(qtfile);
+  quicktime_t *qtfile = address;
+  return quicktime_video_position(qtfile);
 }
 #########################
 */
 
 
 int _get_video_height(char *self, int address, int track){
-  oqt_t *qtfile = address;
-  return oqt_get_video_height(qtfile, track);
+  quicktime_t *qtfile = address;
+  return quicktime_video_height(qtfile, track);
 }
 
 int _get_video_length(char *self, int address, int track){
-  oqt_t *qtfile = address;
-  return oqt_get_video_length(qtfile, track);
+  quicktime_t *qtfile = address;
+//ad  return oqt_get_video_length(qtfile, track);
+  return quicktime_video_length(qtfile, track);
 }
 
 int _get_video_track_count(char *self, int address){
-  oqt_t *qtfile = address;
-  return oqt_get_video_track_count(qtfile);
+  quicktime_t *qtfile = address;
+  return quicktime_video_tracks(qtfile);
 }
 
 
 int _get_video_width(char *self, int address, int track){
-  oqt_t *qtfile = address;
-  return oqt_get_video_width(qtfile, track);
+  quicktime_t *qtfile = address;
+  return quicktime_video_width(qtfile, track);
 }
 
 int new_oqt(char *self, char *filename) {
-  int *qtfile = malloc(sizeof(oqt_t));
-  qtfile = oqt_open(filename);
+//ad  int *qtfile = malloc(sizeof(quicktime_t));
+  int *qtfile = malloc(sizeof(quicktime_t));
+  qtfile = quicktime_open(filename,1,0); //filename, read, write
 
   if(!qtfile) {
-	return -1; //couldn't open *filename
+	return -1; //couldn\'t open *filename
   }
 
   // Read headers
-  if(oqt_read_headers(qtfile)) {
-	oqt_close(qtfile);
-	return -1; //couldn't read movie headers
-  }
+  //if(oqt_read_headers(qtfile)) {
+  //  oqt_close(qtfile);
+  //  return -1; //couldn\'t read movie headers
+  //}
 
   return qtfile;
 }
-
-char* get_oqt(char *self, int address) {
-  oqt_t *qtfile = address;
-  return "asdf";
-}
-
-void display_file_annotations(oqt_t* file) {
-  int i,n = oqt_get_info_count(file);
-  oqt_udta_t* info = oqt_get_info_list(file);
-
-  if (!long_display) printf("  %d annotations.\n", n);
-  for(i=0;i<n;i++) {
-	const char* name = oqt_get_info_name(info[i].code);
-	if (!long_display) printf("  ");
-	
-	if (name)       printf("  %s:", name);
-	else            printf("  %.4s:", info[i].code);
-	
-	if (info[i].value)      printf(" %s\n", info[i].value);
-	else printf(" \n");
-  }
-}
-
-void file_info(char *filename) {
-  oqt_t* qtfile;
-  int i, n;
-
-  // Open the file
-  qtfile = oqt_open(filename);
-  if(!qtfile) {
-	fprintf(stderr, "Couldn't open file %s.\n", filename);
-	return;
-  }
-
-  // Display I/O inforamtion
-  printf("\nStream Type: %s\n", qtfile->stream_type);
-  printf(  "Reference: %s\n", qtfile->stream_reference);
-
-  // Read headers
-  if(oqt_read_headers(qtfile)) {
-	oqt_close(qtfile);
-	printf("Could not read movie headers.\n");
-	return;
-  }
-
-  display_file_annotations(qtfile);
-
-  // Loop through all the audio tracks
-  n = oqt_get_audio_track_count(qtfile);
-  if (!long_display) printf("  %d audio tracks.\n", n);
-  for(i = 0; i < n; i++) {
-	char* codec_code = oqt_get_audio_compressor(qtfile, i);
-	oqt_int64 audio_length = oqt_get_audio_length(qtfile, i);
-	int audio_rate = oqt_get_audio_samplerate(qtfile, i);
-	
-	if (long_display) {
-	  printf("  Audio Track %d.\n", i);
-	  printf("    Channels: %d\n", oqt_get_audio_channels(qtfile, i));
-	  printf("    Bits: %d\n", oqt_get_audio_bits(qtfile, i));
-	  printf("    Sample Rate: %d\n", audio_rate);
-	  printf("    Length: %lld\n", audio_length);
-	  printf("    Duration: %.2f\n", (float)audio_length/audio_rate);
-	  printf("    Hex: 0x%.8x\n", *((int*)codec_code));
-	  printf("    Signature: %.4s\n", codec_code);
-	} else {
-	  printf("    %d channels. %d bits. sample rate %d. length %lld. duration %.2f secs.\n",
-			 oqt_get_audio_channels(qtfile, i),
-			 oqt_get_audio_bits(qtfile, i),
-			 audio_rate, audio_length,
-			 (float)audio_length/audio_rate);
-	}
-
-	// Is the audio codec supported ?
-	if (oqt_supported_audio(qtfile, i)) {
-	  const oqt_codec_info_t* codec_info = oqt_get_audio_codec(qtfile, i);
-	  if (long_display) {
-		printf("    Supported: Yes\n");
-		printf("    Codec Name: %s\n", codec_info->name);
-		printf("    Codec Version: %s\n", codec_info->version);
-	  } else {
-		printf("    Supported using '%s' codec [%.4s] version %s.\n",
-			   codec_info->name,
-			   codec_code,
-			   codec_info->version);
-	  }
-	} else {
-	  if (long_display)       printf("    Supported: No\n");
-	  else printf("    Compressor not supported [%.4s].\n", codec_code);
-	}
-  }
-
-  // Loop through all the Video tracks
-  n = oqt_get_video_track_count(qtfile);
-  if (!long_display) printf("  %d video tracks.\n", n);
-  for(i = 0; i < n; i++) {
-	char* codec_code = oqt_get_video_compressor(qtfile, i);
-	float video_rate = oqt_get_video_framerate(qtfile, i);
-	oqt_int64 video_length = oqt_get_video_length(qtfile, i);
-	
-	if (long_display) {
-	  printf("  Video Track %d.\n", i);
-	  printf("    Width: %d\n", oqt_get_video_width(qtfile, i));
-	  printf("    Height: %d\n", oqt_get_video_height(qtfile, i));
-	  printf("    Depth: %d\n", oqt_get_video_depth(qtfile, i));
-	  printf("    Rate: %f\n", video_rate);
-	  printf("    Length: %lld\n", video_length);
-	  printf("    Duration: %.2f\n", video_length/video_rate);
-	  printf("    Hex: 0x%.8x\n", *((int*)codec_code));
-	  printf("    Signature: %.4s\n", codec_code);
-	} else {
-	  printf("    %dx%d. depth %d. rate %f. length %lld. duration %.2f secs.\n",
-			 oqt_get_video_width(qtfile, i),
-			 oqt_get_video_height(qtfile, i),
-			 oqt_get_video_depth(qtfile, i),
-			 video_rate, video_length,
-			 video_length/video_rate);
-	}
-
-	// Is the video codec supported ?
-	  if (oqt_supported_video(qtfile, i)) {
-		const oqt_codec_info_t* codec_info = oqt_get_video_codec(qtfile, i);
-		if (long_display) {
-		  printf("    Supported: Yes\n");
-		  printf("    Codec Name: %s\n", codec_info->name);
-		  printf("    Codec Version: %s\n", codec_info->version);
-		} else {
-		  printf("    Supported using '%s' codec [%.4s] version %s.\n",
-				 codec_info->name,
-				 codec_code,
-				 codec_info->version);
-		}
-	  } else {
-		if (long_display)       printf("    Supported: No\n");
-		else printf("    Compressor not supported [%.4s].\n", codec_code);
-	  }
-  }
-
-  // Close the file
-  oqt_close(qtfile);
-}
+//
+//char* get_oqt(char *self, int address) {
+////ad  quicktime_t *qtfile = address;
+//  quicktime_t *qtfile = address;
+//  return "asdf";
+//}
+//
+//void display_file_annotations(quicktime_t* file) {
+//  int i,n = quicktime_info_count(file);
+//  oqt_udta_t* info = quicktime_info_list(file);
+//
+//  if (!long_display) printf("  %d annotations.\n", n);
+//  for(i=0;i<n;i++) {
+//	const char* name = quicktime_info_name(info[i].code);
+//	if (!long_display) printf("  ");
+//	
+//	if (name)       printf("  %s:", name);
+//	else            printf("  %.4s:", info[i].code);
+//	
+//	if (info[i].value)      printf(" %s\n", info[i].value);
+//	else printf(" \n");
+//  }
+//}
+//
+//void file_info(char *filename) {
+//  quicktime_t* qtfile;
+//  int i, n;
+//
+//  // Open the file
+//  qtfile = oqt_open(filename);
+//  if(!qtfile) {
+//	fprintf(stderr, "Couldn't open file %s.\n", filename);
+//	return;
+//  }
+//
+//  // Display I/O inforamtion
+//  printf("\nStream Type: %s\n", qtfile->stream_type);
+//  printf(  "Reference: %s\n", qtfile->stream_reference);
+//
+//  // Read headers
+//  if(oqt_read_headers(qtfile)) {
+//	oqt_close(qtfile);
+//	printf("Could not read movie headers.\n");
+//	return;
+//  }
+//
+//  display_file_annotations(qtfile);
+//
+//  // Loop through all the audio tracks
+//  n = quicktime_audio_track_count(qtfile);
+//  if (!long_display) printf("  %d audio tracks.\n", n);
+//  for(i = 0; i < n; i++) {
+//	char* codec_code = quicktime_audio_compressor(qtfile, i);
+//	oqt_int64 audio_length = quicktime_audio_length(qtfile, i);
+//	int audio_rate = quicktime_audio_samplerate(qtfile, i);
+//	
+//	if (long_display) {
+//	  printf("  Audio Track %d.\n", i);
+//	  printf("    Channels: %d\n", quicktime_audio_channels(qtfile, i));
+//	  printf("    Bits: %d\n", quicktime_audio_bits(qtfile, i));
+//	  printf("    Sample Rate: %d\n", audio_rate);
+//	  printf("    Length: %lld\n", audio_length);
+//	  printf("    Duration: %.2f\n", (float)audio_length/audio_rate);
+//	  printf("    Hex: 0x%.8x\n", *((int*)codec_code));
+//	  printf("    Signature: %.4s\n", codec_code);
+//	} else {
+//	  printf("    %d channels. %d bits. sample rate %d. length %lld. duration %.2f secs.\n",
+//			 quicktime_audio_channels(qtfile, i),
+//			 quicktime_audio_bits(qtfile, i),
+//			 audio_rate, audio_length,
+//			 (float)audio_length/audio_rate);
+//	}
+//
+//	// Is the audio codec supported ?
+//	if (oqt_supported_audio(qtfile, i)) {
+//	  const oqt_codec_info_t* codec_info = quicktime_audio_codec(qtfile, i);
+//	  if (long_display) {
+//		printf("    Supported: Yes\n");
+//		printf("    Codec Name: %s\n", codec_info->name);
+//		printf("    Codec Version: %s\n", codec_info->version);
+//	  } else {
+//		printf("    Supported using '%s' codec [%.4s] version %s.\n",
+//			   codec_info->name,
+//			   codec_code,
+//			   codec_info->version);
+//	  }
+//	} else {
+//	  if (long_display)       printf("    Supported: No\n");
+//	  else printf("    Compressor not supported [%.4s].\n", codec_code);
+//	}
+//  }
+//
+//  // Loop through all the Video tracks
+//  n = quicktime_video_track_count(qtfile);
+//  if (!long_display) printf("  %d video tracks.\n", n);
+//  for(i = 0; i < n; i++) {
+//	char* codec_code = quicktime_video_compressor(qtfile, i);
+//	float video_rate = quicktime_video_framerate(qtfile, i);
+//	oqt_int64 video_length = quicktime_video_length(qtfile, i);
+//	
+//	if (long_display) {
+//	  printf("  Video Track %d.\n", i);
+//	  printf("    Width: %d\n", quicktime_video_width(qtfile, i));
+//	  printf("    Height: %d\n", quicktime_video_height(qtfile, i));
+//	  printf("    Depth: %d\n", quicktime_video_depth(qtfile, i));
+//	  printf("    Rate: %f\n", video_rate);
+//	  printf("    Length: %lld\n", video_length);
+//	  printf("    Duration: %.2f\n", video_length/video_rate);
+//	  printf("    Hex: 0x%.8x\n", *((int*)codec_code));
+//	  printf("    Signature: %.4s\n", codec_code);
+//	} else {
+//	  printf("    %dx%d. depth %d. rate %f. length %lld. duration %.2f secs.\n",
+//			 quicktime_video_width(qtfile, i),
+//			 quicktime_video_height(qtfile, i),
+//			 quicktime_video_depth(qtfile, i),
+//			 video_rate, video_length,
+//			 video_length/video_rate);
+//	}
+//
+//	// Is the video codec supported ?
+//	  if (oqt_supported_video(qtfile, i)) {
+//		const oqt_codec_info_t* codec_info = quicktime_video_codec(qtfile, i);
+//		if (long_display) {
+//		  printf("    Supported: Yes\n");
+//		  printf("    Codec Name: %s\n", codec_info->name);
+//		  printf("    Codec Version: %s\n", codec_info->version);
+//		} else {
+//		  printf("    Supported using '%s' codec [%.4s] version %s.\n",
+//				 codec_info->name,
+//				 codec_code,
+//				 codec_info->version);
+//		}
+//	  } else {
+//		if (long_display)       printf("    Supported: No\n");
+//		else printf("    Compressor not supported [%.4s].\n", codec_code);
+//	  }
+//  }
+//
+//  // Close the file
+//  oqt_close(qtfile);
+//}
+//

@@ -1,6 +1,10 @@
 Revision history for Perl extension OpenQuicktime.
 
-0.01  Mon Oct 21 16:20:49 2002
+1.00  Mon Oct 21 16:20:49 2002
 	- original version; created by h2xs 1.21 with options
 		-n OpenQuicktime
 
+1.01  Sun Jun 29 12:52:59 2003
+	- changes to be compliant with new openquicktime release
+	  (still version 1.00a, but API has changed).  This release
+	  is compatible with libopenquicktime 1.00a as of TODAY.
